@@ -4,7 +4,7 @@ const cors = require('cors');
 const socketIo = require('socket.io');
 const ffmpeg = require('fluent-ffmpeg');
 const dotenv = require('dotenv');
-const path= require('path')
+const path = require('path')
 const { default: mongoose } = require('mongoose');
 const webrtc = require('wrtc');
 const { PassThrough } = require('stream');
@@ -44,8 +44,14 @@ app.post('/api/v1/broadcast', async (req, res) => {
             console.log(event);
             console.log('Broadcasting peer - ontrack event:', event.streams[0]);
             senderStream = event.streams[0];
-            console.log(senderStream);            
+            console.log(senderStream);
         }
+        peer.onicecandidate = (event) => {
+            if (event.candidate) {
+                console.log('New ICE candidate:', event.candidate);
+                peer.addIceCandidate(event.candidate);
+            }
+        };
 
         const sessionDescription = new webrtc.RTCSessionDescription(req.body);
         await peer.setRemoteDescription(sessionDescription);
@@ -84,6 +90,12 @@ app.post('/api/v1/consume', async (req, res) => {
             return;
         }
         senderStream.getTracks().forEach(track => peer.addTrack(track, senderStream));
+        peer.onicecandidate = (event) => {
+            if (event.candidate) {
+                console.log('New ICE candidate:', event.candidate);
+                peer.addIceCandidate(event.candidate);
+            }
+        };
         const answer = await peer.createAnswer();
         await peer.setLocalDescription(answer);
 
