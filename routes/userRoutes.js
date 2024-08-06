@@ -73,5 +73,20 @@ router.get('/user', async (req, res) => {
     }
 })
 
-
+//  call a user
+router.post('/call/:from/:to', async (req, res) => {
+    const { from, to } = req.params;
+    try {
+        const fromUser = await User.findById(from);
+        const toUser = await User.findById(to);
+        if (!fromUser || !toUser) {
+            return res.status(400).json({ success: false, message: 'User not found' });
+        }
+        return res.json({ success: true, fromUser, toUser });
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+})
 module.exports = router;
